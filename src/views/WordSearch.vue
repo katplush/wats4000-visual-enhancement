@@ -71,19 +71,14 @@
 
 <script>
 import axios from "axios";
-// Note: vue2-animate is added using the require statement because it is a CSS file
 require("vue2-animate/dist/vue2-animate.min.css");
-// TODO: Import CubeSpinner for use as a child component
 import CubeSpinner from "@/components/CubeSpinner";
-
-// TODO: Import MessageContainer for use as a child component
 import MessageContainer from '@/components/MessageContainer';
 
 
 export default {
   name: "WordSearch",
   components: {
-    // TODO: Define child components here.
   },
   data() {
     return {
@@ -102,7 +97,6 @@ export default {
       if (this.wordList.indexOf(word) === -1) {
         this.wordList.push(word);
         console.log(`Added ${word} to wordList.`);
-        // TODO: Add message to this.messages to reflect this change.
         this.messages.push({
           type: "success",
           text: `${word} added to WordList`
