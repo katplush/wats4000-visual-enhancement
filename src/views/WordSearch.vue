@@ -1,24 +1,50 @@
 <template>
   <div>
     <div class="messages">
-      <!-- TODO: Add message-container and supply messages property. -->
+      <message-container v-bind:messages="messages"></message-container>
     </div>
     <div class="word-search">
       <form v-on:submit.prevent="findWords">
-        <p><label>Find synonyms for <input type="text" v-model="phrase" placeholder="word or phrase"> that:</label></p>
+        <p>
+          <label>
+            Find synonyms for
+            <input type="text" v-model="phrase" placeholder="word or phrase"> that:
+          </label>
+        </p>
         <ul>
-          <li><label>sounds like <input type="text" v-model="soundsLike" placeholder="word or phrase"></label></li>
-          <li><label>start with the letter <input type="text" v-model="startLetter" placeholder="single letter"></label></li>
-          <li><label>end with the letter <input type="text" v-model="endLetter" placeholder="single letter"></label></li>
+          <li>
+            <label>
+              sounds like
+              <input type="text" v-model="soundsLike" placeholder="word or phrase">
+            </label>
+          </li>
+          <li>
+            <label>
+              start with the letter
+              <input type="text" v-model="startLetter" placeholder="single letter">
+            </label>
+          </li>
+          <li>
+            <label>
+              end with the letter
+              <input type="text" v-model="endLetter" placeholder="single letter">
+            </label>
+          </li>
         </ul>
-        <p><button type="submit">Search</button></p>
+        <p>
+          <button type="submit">Search</button>
+        </p>
       </form>
     </div>
     <div class="word-list-container">
       <h2>Word List</h2>
       <ul class="word-list">
-        <!-- TODO: Add transition-group around the list item here to animate items in the word list. -->
-          <li v-for="(word,index) in wordList" :key="index">{{ word }}&nbsp;<button v-on:click="removeWord(word)" class="remove-word">x</button></li>
+        <transition-group name="slideRight" tag="div" appear>
+          <li v-for="word in wordList" :key="word">
+            {{ word }}&nbsp;
+            <button v-on:click="removeWord(word)" class="remove-word">x</button>
+          </li>
+        </transition-group>
       </ul>
     </div>
     <div class="results-container">
@@ -26,11 +52,14 @@
       <spinner v-if="showSpinner"></spinner>
       <h2 v-if="results && results.length > 0">{{ results.length }} Words Found</h2>
       <ul v-if="results && results.length > 0" class="results">
-        <!-- TODO: Add transition-group around the list item here to animate items in the results list. -->
-          <li v-for="(item,index) in results" class="item" :key="index">
+        <transition-group name="fade" tag="div" appear>
+          <li v-for="item in results" class="item" :key="item.word">
             <p class="result-word">{{ item.word }}</p>
-            <p><button v-on:click="addWord(item.word)" class="add-word">Add to WordList</button></p>
+            <p>
+              <button v-on:click="addWord(item.word)" class="add-word">Add to WordList</button>
+            </p>
           </li>
+        </transition-group>
       </ul>
       <div v-else-if="results && results.length === 0" class="no-results">
         <h2>No Words Found</h2>
@@ -41,76 +70,90 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 // Note: vue2-animate is added using the require statement because it is a CSS file
-require('vue2-animate/dist/vue2-animate.min.css');
+require("vue2-animate/dist/vue2-animate.min.css");
 // TODO: Import CubeSpinner for use as a child component
-import CubeSpinner from '@/components/CubeSpinner';
+import CubeSpinner from "@/components/CubeSpinner";
 
 // TODO: Import MessageContainer for use as a child component
+import MessageContainer from '@/components/MessageContainer';
 
 
 export default {
-  name: 'WordSearch',
+  name: "WordSearch",
   components: {
     // TODO: Define child components here.
-
   },
-  data () {
+  data() {
     return {
       results: null,
       wordList: [],
       messages: [],
-      phrase: '',
-      soundsLike: '',
-      startLetter: '',
-      endLetter: '',
+      phrase: "",
+      soundsLike: "",
+      startLetter: "",
+      endLetter: "",
       showSpinner: false
-    }
+    };
   },
   methods: {
-    addWord: function (word) {
+    addWord: function(word) {
       if (this.wordList.indexOf(word) === -1) {
         this.wordList.push(word);
         console.log(`Added ${word} to wordList.`);
         // TODO: Add message to this.messages to reflect this change.
-
+        this.messages.push({
+          type: "success",
+          text: `${word} added to WordList`
+        })
       } else {
-        console.log('Word is already on wordlist.');
-        // TODO: Add message to this.messages to reflect this change.
-
+        console.log("Word is already on wordlist.");
+        this.messages.push({
+          type: "info",
+          text: `${word} is already in the WordList`
+        })
       }
     },
-    removeWord: function (word) {
+    removeWord: function(word) {
       this.wordList.splice(this.wordList.indexOf(word), 1);
-      // TODO: Add message to this.messages to reflect this change.
-
+      this.messages.push({
+        type: "success", 
+        text: `${word} removed from WordList`
+      })
     },
     findWords: function() {
       this.showSpinner = true;
       this.results = null;
-      axios.get('https://api.datamuse.com/words', {
-        params: {
-          ml: this.phrase,
-          sl: this.soundsLike,
-          sp: this.startLetter === '' && this.endLetter ==='' ? '' : `${this.startLetter}*${this.endLetter}`
-        }
-      })
-      .then( response => {
-        this.showSpinner = false;
-        this.results = response.data;
-      })
-      .catch( error => {
-        this.showSpinner = false;
-        // TODO: Add message to this.messages to display the errors.
-
-      })
+      axios
+        .get("https://api.datamuse.com/words", {
+          params: {
+            ml: this.phrase,
+            sl: this.soundsLike,
+            sp:
+              this.startLetter === "" && this.endLetter === ""
+                ? ""
+                : `${this.startLetter}*${this.endLetter}`
+          }
+        })
+        .then(response => {
+          this.showSpinner = false;
+          this.results = response.data;
+        })
+        .catch(error => {
+          this.showSpinner = false;
+          this.messages.push({
+            type: 'error',
+            text: error.message
+          });
+        })
     }
   },
   components: {
-    spinner: CubeSpinner
+    spinner: CubeSpinner,
+    'message-container': MessageContainer
   }
-}
+};
 </script>
 
 <style scoped>
@@ -130,7 +173,7 @@ export default {
 .results-container {
   clear: both;
 }
-input[type="text"]{
+input[type="text"] {
   border-top: none;
   border-left: none;
   border-right: none;
@@ -139,10 +182,10 @@ input[type="text"]{
   font-size: 1.2rem;
   color: #2c3e50;
   font-weight: 300;
-  background: rgba(0,0,0,0.02);
+  background: rgba(0, 0, 0, 0.02);
   padding: 0.5rem;
 }
-button{
+button {
   background: #333;
   padding: 0.5rem;
   font-weight: 300;
@@ -171,10 +214,12 @@ button.remove-word:hover {
   background: #aa0000;
   color: #fde300;
 }
-h1, h2 {
+h1,
+h2 {
   font-weight: normal;
 }
-ul.results, ul.word-list {
+ul.results,
+ul.word-list {
   list-style-type: none;
   padding: 0;
 }
@@ -193,7 +238,7 @@ ul.results, ul.word-list {
   color: #fff;
   font-weight: 300;
   font-size: 1.2rem;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
 }
 ul.errors {
   list-style-type: none;
